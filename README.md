@@ -1,3 +1,3 @@
 # PropertyWrappers
 
-A description of this package.
+A collection of useful property wrappers in Swift.
