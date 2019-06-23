@@ -3,5 +3,6 @@ import XCTest
 import PropertyWrappersTests
 
 var tests = [XCTestCaseEntry]()
-tests += PropertyWrappersTests.allTests()
+tests += PropertyWrappersTests.__allTests()
+
 XCTMain(tests)
