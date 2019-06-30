@@ -50,6 +50,12 @@ final class PropertyWrappersTests: XCTestCase {
     XCTAssertEqual(sut.cities, ["Berlin", "London"])
   }
 
+  func testArrayOfCustomTypes() {
+    sut.tabOrder = [.search, .profile, .timeline]
+    XCTAssertEqual(defaults.array(forKey: "test-tabOrder") as? [String], ["search", "profile", "timeline"])
+    XCTAssertEqual(sut.tabOrder, [.search, .profile, .timeline])
+  }
+
   func testDictionary() {
     sut.menu = ["File": ["New", "Open", "Save"], "Edit": ["Cut", "Copy", "Paste"]]
     XCTAssertEqual(defaults.dictionary(forKey: "test-menu") as? [String: [String]], ["File": ["New", "Open", "Save"], "Edit": ["Cut", "Copy", "Paste"]])
@@ -74,6 +80,7 @@ fileprivate struct UserDefaultContainer {
   @UserDefault var cities: [String]
   @UserDefault var menu: [String: [String]]
   @UserDefault var selectedTab: Tab
+  @UserDefault var tabOrder: [Tab]
 
   init(defaults: UserDefaults) {
     self.defaults = defaults
@@ -83,6 +90,7 @@ fileprivate struct UserDefaultContainer {
     $cities = UserDefault(key: "test-cities", defaultValue: [], userDefaults: defaults)
     $menu = UserDefault(key: "test-menu", defaultValue: [:], userDefaults: defaults)
     $selectedTab = UserDefault(key: "test-selectedTab", defaultValue: .timeline, userDefaults: defaults)
+    $tabOrder = UserDefault(key: "test-tabOrder", defaultValue: [.timeline, .profile, .search], userDefaults: defaults)
   }
 }
 

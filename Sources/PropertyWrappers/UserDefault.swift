@@ -48,23 +48,22 @@ public struct UserDefault<Value: PropertyListConvertible> {
   }
 }
 
+// MARK: - PropertyListConvertible
+
 /// A type that can convert itself to and from a plist-compatible type (for storage in a plist).
 public protocol PropertyListConvertible {
   /// The type that's used for storage in the plist.
-  ///
-  /// Must be a plist-compatible type:
-  /// - Dictionary/NSDictionary (Key and Value must be plist types)
-  /// - Array/NSArray (Element must be a plist type)
-  /// - String/NSString
-  /// - A numeric type that's convertible to NSNumber
-  /// - Bool
-  /// - Date/NSDate
-  /// - Data/NSData
-  ///
-  /// See https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/PropertyList.html
-  associatedtype PropertyListStorage
+  associatedtype PropertyListStorage: PropertyListNativelyStorable
 
+  /// Creates an instance from its property list representation.
+  ///
+  /// The default implementation for PropertyListStorage == Self uses `propertyListValue` directly as `self`.
+  ///
+  /// - Returns: `nil` if the conversion failed.
   init?(propertyListValue: PropertyListStorage)
+
+  /// The property list representation of `self`.
+  /// The default implementation for PropertyListStorage == Self returns `self`.
   var propertyListValue: PropertyListStorage { get }
 }
 
@@ -76,27 +75,100 @@ extension PropertyListConvertible where PropertyListStorage == Self {
   public var propertyListValue: Self { self }
 }
 
-extension String: PropertyListConvertible {}
-extension Int: PropertyListConvertible {}
-extension Int8: PropertyListConvertible {}
-extension Int16: PropertyListConvertible {}
-extension Int32: PropertyListConvertible {}
-extension Int64: PropertyListConvertible {}
-extension UInt: PropertyListConvertible {}
-extension UInt8: PropertyListConvertible {}
-extension UInt16: PropertyListConvertible {}
-extension UInt32: PropertyListConvertible {}
-extension UInt64: PropertyListConvertible {}
-extension Float: PropertyListConvertible {}
-extension Double: PropertyListConvertible {}
-extension Bool: PropertyListConvertible {}
-extension Date: PropertyListConvertible {}
-extension Data: PropertyListConvertible {}
-
+/// Arrays convert themselves to their property list representation by converting each element to its plist representation.
 extension Array: PropertyListConvertible where Element: PropertyListConvertible {
-  public typealias PropertyListStorage = Self
+  public typealias PropertyListStorage = [Element.PropertyListStorage]
+
+  /// Returns `nil` if one or more elements can't be converted.
+  public init?(propertyListValue plistArray: [Element.PropertyListStorage]) {
+    var result: [Element] = []
+    result.reserveCapacity(plistArray.count)
+    for plistElement in plistArray {
+      guard let element = Element(propertyListValue: plistElement) else {
+        // Abort if one or more elements can't be created.
+        return nil
+      }
+      result.append(element)
+    }
+    self = result
+  }
+
+  public var propertyListValue: [Element.PropertyListStorage] {
+    map { $0.propertyListValue }
+  }
 }
 
-extension Dictionary: PropertyListConvertible where Key: PropertyListConvertible, Value: PropertyListConvertible {
-  public typealias PropertyListStorage = Self
+extension Dictionary: PropertyListConvertible
+  where Key: PropertyListConvertible, Value: PropertyListConvertible,
+    Key.PropertyListStorage: Hashable,
+    // The Swift 5.1 compiler forced me to add these two constraints, but they don't make much
+    // sense to me. They are related to the `Dictionary: PropertyListNativelyStorable` extension.
+    // I believe they mae sure that the PropertyListStorage associated type is the same in both
+    // extensions.
+    Key.PropertyListStorage == Key.PropertyListStorage.PropertyListStorage,
+    Value.PropertyListStorage == Value.PropertyListStorage.PropertyListStorage
+{
+  public typealias PropertyListStorage = [Key.PropertyListStorage: Value.PropertyListStorage]
+
+  /// Returns `nil` if one or more elements can't be converted.
+  public init?(propertyListValue plistDict: [Key.PropertyListStorage: Value.PropertyListStorage]) {
+    var result: [Key: Value] = [:]
+    result.reserveCapacity(plistDict.count)
+    for (plistKey, plistValue) in plistDict {
+      guard let key = Key(propertyListValue: plistKey), let value = Value(propertyListValue: plistValue) else {
+        // Abort if one or more elements can't be created.
+        return nil
+      }
+      result[key] = value
+    }
+    self = result
+  }
+
+  /// If two or more keys convert to the same key, the result will include only one of those key-value pairs.
+  public var propertyListValue: [Key.PropertyListStorage: Value.PropertyListStorage] {
+    return Dictionary<Key.PropertyListStorage, Value.PropertyListStorage>(
+      map { ($0.key.propertyListValue, $0.value.propertyListValue) },
+      uniquingKeysWith: { $1 })
+  }
 }
+
+// MARK: - PropertyListNativelyStorable
+
+/// A type that can be natively stored in a property list, i.e. a _property list object_.
+///
+/// This is a marker protocol, i.e. it has no requirements. You should not conform your own types to it.
+/// We already provide the required conformances for the standard plist-compatible types.
+///
+/// Instances of these types can be property list objects:
+///
+/// - Dictionary/NSDictionary (Key and Value must be plist types)
+/// - Array/NSArray (Element must be a plist type)
+/// - String/NSString
+/// - A numeric type that's convertible to NSNumber
+/// - Bool
+/// - Date/NSDate
+/// - Data/NSData
+///
+/// See https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/PropertyList.html
+public protocol PropertyListNativelyStorable: PropertyListConvertible {}
+
+extension String: PropertyListNativelyStorable {}
+extension Int: PropertyListNativelyStorable {}
+extension Int8: PropertyListNativelyStorable {}
+extension Int16: PropertyListNativelyStorable {}
+extension Int32: PropertyListNativelyStorable {}
+extension Int64: PropertyListNativelyStorable {}
+extension UInt: PropertyListNativelyStorable {}
+extension UInt8: PropertyListNativelyStorable {}
+extension UInt16: PropertyListNativelyStorable {}
+extension UInt32: PropertyListNativelyStorable {}
+extension UInt64: PropertyListNativelyStorable {}
+extension Float: PropertyListNativelyStorable {}
+extension Double: PropertyListNativelyStorable {}
+extension Bool: PropertyListNativelyStorable {}
+extension Date: PropertyListNativelyStorable {}
+extension Data: PropertyListNativelyStorable {}
+
+extension Array: PropertyListNativelyStorable where Element: PropertyListNativelyStorable {}
+
+extension Dictionary: PropertyListNativelyStorable where Key: PropertyListNativelyStorable, Value: PropertyListNativelyStorable, Key.PropertyListStorage == Key, Value.PropertyListStorage == Value {}

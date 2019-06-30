@@ -18,6 +18,7 @@ extension PropertyWrappersTests {
     // to regenerate.
     static let __allTests__PropertyWrappersTests = [
         ("testArray", testArray),
+        ("testArrayOfCustomTypes", testArrayOfCustomTypes),
         ("testAssignmentSetsUserDefault", testAssignmentSetsUserDefault),
         ("testCustomType", testCustomType),
         ("testDictionary", testDictionary),
