@@ -1,7 +1,7 @@
 import PropertyWrappers
 import XCTest
 
-final class PropertyWrappersTests: XCTestCase {
+final class UserDefaultsTests: XCTestCase {
   private var defaults: UserDefaults!
   private var sut: UserDefaultContainer!
 
