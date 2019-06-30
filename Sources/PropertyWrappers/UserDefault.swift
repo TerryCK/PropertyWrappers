@@ -37,7 +37,7 @@ public struct UserDefault<Value: PropertyListConvertible> {
 
   public var value: Value {
     get {
-      guard let plistValue = userDefaults.object(forKey: key) as? Value.PropertyListStorage,
+      guard let plistValue = userDefaults.object(forKey: key) as? Value.Storage,
         let value = Value(propertyListValue: plistValue)
         else { return defaultValue() }
       return value
@@ -53,21 +53,21 @@ public struct UserDefault<Value: PropertyListConvertible> {
 /// A type that can convert itself to and from a plist-compatible type (for storage in a plist).
 public protocol PropertyListConvertible {
   /// The type that's used for storage in the plist.
-  associatedtype PropertyListStorage: PropertyListNativelyStorable
+  associatedtype Storage: PropertyListNativelyStorable
 
   /// Creates an instance from its property list representation.
   ///
   /// The default implementation for PropertyListStorage == Self uses `propertyListValue` directly as `self`.
   ///
   /// - Returns: `nil` if the conversion failed.
-  init?(propertyListValue: PropertyListStorage)
+  init?(propertyListValue: Storage)
 
   /// The property list representation of `self`.
   /// The default implementation for PropertyListStorage == Self returns `self`.
-  var propertyListValue: PropertyListStorage { get }
+  var propertyListValue: Storage { get }
 }
 
-extension PropertyListConvertible where PropertyListStorage == Self {
+extension PropertyListConvertible where Storage == Self {
   public init?(propertyListValue: Self) {
     self = propertyListValue
   }
@@ -77,10 +77,10 @@ extension PropertyListConvertible where PropertyListStorage == Self {
 
 /// Arrays convert themselves to their property list representation by converting each element to its plist representation.
 extension Array: PropertyListConvertible where Element: PropertyListConvertible {
-  public typealias PropertyListStorage = [Element.PropertyListStorage]
+  public typealias PropertyListStorage = [Element.Storage]
 
   /// Returns `nil` if one or more elements can't be converted.
-  public init?(propertyListValue plistArray: [Element.PropertyListStorage]) {
+  public init?(propertyListValue plistArray: [Element.Storage]) {
     var result: [Element] = []
     result.reserveCapacity(plistArray.count)
     for plistElement in plistArray {
@@ -93,25 +93,25 @@ extension Array: PropertyListConvertible where Element: PropertyListConvertible 
     self = result
   }
 
-  public var propertyListValue: [Element.PropertyListStorage] {
+  public var propertyListValue: [Element.Storage] {
     map { $0.propertyListValue }
   }
 }
 
 extension Dictionary: PropertyListConvertible
   where Key: PropertyListConvertible, Value: PropertyListConvertible,
-    Key.PropertyListStorage: Hashable,
+    Key.Storage: Hashable,
     // The Swift 5.1 compiler forced me to add these two constraints, but they don't make much
     // sense to me. They are related to the `Dictionary: PropertyListNativelyStorable` extension.
     // I believe they mae sure that the PropertyListStorage associated type is the same in both
     // extensions.
-    Key.PropertyListStorage == Key.PropertyListStorage.PropertyListStorage,
-    Value.PropertyListStorage == Value.PropertyListStorage.PropertyListStorage
+    Key.Storage == Key.Storage.Storage,
+    Value.Storage == Value.Storage.Storage
 {
-  public typealias PropertyListStorage = [Key.PropertyListStorage: Value.PropertyListStorage]
+  public typealias PropertyListStorage = [Key.Storage: Value.Storage]
 
   /// Returns `nil` if one or more elements can't be converted.
-  public init?(propertyListValue plistDict: [Key.PropertyListStorage: Value.PropertyListStorage]) {
+  public init?(propertyListValue plistDict: [Key.Storage: Value.Storage]) {
     var result: [Key: Value] = [:]
     result.reserveCapacity(plistDict.count)
     for (plistKey, plistValue) in plistDict {
@@ -125,8 +125,8 @@ extension Dictionary: PropertyListConvertible
   }
 
   /// If two or more keys convert to the same key, the result will include only one of those key-value pairs.
-  public var propertyListValue: [Key.PropertyListStorage: Value.PropertyListStorage] {
-    return Dictionary<Key.PropertyListStorage, Value.PropertyListStorage>(
+  public var propertyListValue: [Key.Storage: Value.Storage] {
+    return Dictionary<Key.Storage, Value.Storage>(
       map { ($0.key.propertyListValue, $0.value.propertyListValue) },
       uniquingKeysWith: { $1 })
   }
@@ -171,4 +171,4 @@ extension Data: PropertyListNativelyStorable {}
 
 extension Array: PropertyListNativelyStorable where Element: PropertyListNativelyStorable {}
 
-extension Dictionary: PropertyListNativelyStorable where Key: PropertyListNativelyStorable, Value: PropertyListNativelyStorable, Key.PropertyListStorage == Key, Value.PropertyListStorage == Value {}
+extension Dictionary: PropertyListNativelyStorable where Key: PropertyListNativelyStorable, Value: PropertyListNativelyStorable, Key.Storage == Key, Value.Storage == Value {}
