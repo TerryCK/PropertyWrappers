@@ -8,6 +8,7 @@ final class PropertyWrappersTests: XCTestCase {
   override func setUp() {
     super.setUp()
     defaults = UserDefaults(suiteName: "unit-tests")!
+    // Clear user defaults before each test
     defaults.removePersistentDomain(forName: "unit-tests")
     sut = UserDefaultContainer(defaults: defaults)
   }
