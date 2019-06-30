@@ -22,6 +22,7 @@ extension PropertyWrappersTests {
         ("testCustomType", testCustomType),
         ("testDictionary", testDictionary),
         ("testGetterRetrievesUserDefault", testGetterRetrievesUserDefault),
+        ("testReturnsValueStoredInUserDefaults", testReturnsValueStoredInUserDefaults),
         ("testSetterIsNonmutating", testSetterIsNonmutating),
         ("testUsesDefaultValueIfNotSet", testUsesDefaultValueIfNotSet),
     ]

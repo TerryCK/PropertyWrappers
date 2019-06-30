@@ -33,6 +33,11 @@ final class PropertyWrappersTests: XCTestCase {
     XCTAssertEqual(sut.favoriteNumber, 42)
   }
 
+  func testReturnsValueStoredInUserDefaults() {
+    defaults.set(23, forKey: "test-favoriteNumber")
+    XCTAssertEqual(sut.favoriteNumber, 23)
+  }
+
   func testSetterIsNonmutating() {
     sut.favoriteNumber = 23
     // No assertion needed. The test is that assigning to a let variable compiles.
