@@ -18,7 +18,6 @@ extension LazyTests {
     // to regenerate.
     static let __allTests__LazyTests = [
         ("testLazyCallsInitializerLazily", testLazyCallsInitializerLazily),
-        ("testLazyDoesntCallInitializerWhenSetterIsInvokedFirst", testLazyDoesntCallInitializerWhenSetterIsInvokedFirst),
         ("testLazyInitializesValue", testLazyInitializesValue),
     ]
 }
