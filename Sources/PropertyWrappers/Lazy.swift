@@ -2,7 +2,7 @@
 ///
 /// This isn't a complete replacement for Swift's built-in `lazy` keyword because, unlike `lazy`, the initial value of a `@Lazy` property can't refer to the `self` of the enclosing type.
 ///
-/// Source: [Swift Evolution proposal SE-0258](https://github.com/apple/swift-evolution/blob/master/proposals/0258-property-wrappers.md)
+/// Source: [Swift Evolution proposal SE-0258](https://github.com/apple/swift-evolution/blob/master/proposals/0258-property-wrappers.md#proposed-solution)
 @propertyWrapper
 public enum Lazy<Value> {
   case uninitialized(() -> Value)
