@@ -35,7 +35,7 @@ public struct UserDefault<Value: PropertyListConvertible> {
     self.userDefaults = userDefaults
   }
 
-  public var value: Value {
+  public var wrappedValue: Value {
     get {
       guard let plistValue = userDefaults.object(forKey: key) as? Value.Storage,
         let value = Value(propertyListValue: plistValue)

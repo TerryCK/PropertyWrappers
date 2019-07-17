@@ -14,7 +14,7 @@ public enum Lazy<Value> {
     self = .uninitialized(initialValue)
   }
   
-  public var value: Value {
+  public var wrappedValue: Value {
     mutating get {
       switch self {
       case .uninitialized(let initializer):

@@ -14,7 +14,7 @@ public struct DelayedLet<Value> {
 
   public init() {}
 
-  public var value: Value {
+  public var wrappedValue: Value {
     get {
       guard let value = _value else {
         fatalError("DelayedLet: property accessed before being initialized")
@@ -49,7 +49,7 @@ public struct DelayedVar<Value> {
 
   public init() {}
 
-  public var value: Value {
+  public var wrappedValue: Value {
     get {
       guard let value = _value else {
         fatalError("DelayedVar: property accessed before being initialized")

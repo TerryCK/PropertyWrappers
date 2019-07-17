@@ -9,9 +9,9 @@ final class LazyTests: XCTestCase {
 
   func testLazyCallsInitializerLazily() {
     var sut = LazyContainer(lazyValue: 23)
-    assertIsUninitialized(sut.$lazyValue)
+    assertIsUninitialized(sut.lazyValueWrapper)
     XCTAssertEqual(sut.lazyValue, 23)
-    assertIsInitialized(sut.$lazyValue)
+    assertIsInitialized(sut.lazyValueWrapper)
   }
   
   func _testLazyDoesntCallInitializerWhenSetterIsInvokedFirst() {
@@ -24,6 +24,9 @@ final class LazyTests: XCTestCase {
 /// Container struct because local vars can't be property wrappers yet.
 fileprivate struct LazyContainer {
   @Lazy var lazyValue: Int
+
+  /// Republishing synthesized storage property because it's private
+  var lazyValueWrapper: Lazy<Int> { _lazyValue }
 }
 
 /// Asserts that a `Lazy` value is .unintialized.

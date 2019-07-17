@@ -84,13 +84,13 @@ fileprivate struct UserDefaultContainer {
 
   init(defaults: UserDefaults) {
     self.defaults = defaults
-    $favoriteNumber = UserDefault(key: "test-favoriteNumber", defaultValue: 42, userDefaults: defaults)
-    $localeIdentifier = UserDefault(key: "test-localeIdentifier", defaultValue: "en_US", userDefaults: defaults)
-    $firstLaunch = UserDefault(key: "test-firstLaunch", defaultValue: Date(timeIntervalSinceReferenceDate: 500_000_000), userDefaults: defaults)
-    $cities = UserDefault(key: "test-cities", defaultValue: [], userDefaults: defaults)
-    $menu = UserDefault(key: "test-menu", defaultValue: [:], userDefaults: defaults)
-    $selectedTab = UserDefault(key: "test-selectedTab", defaultValue: .timeline, userDefaults: defaults)
-    $tabOrder = UserDefault(key: "test-tabOrder", defaultValue: [.timeline, .profile, .search], userDefaults: defaults)
+    _favoriteNumber = UserDefault(key: "test-favoriteNumber", defaultValue: 42, userDefaults: defaults)
+    _localeIdentifier = UserDefault(key: "test-localeIdentifier", defaultValue: "en_US", userDefaults: defaults)
+    _firstLaunch = UserDefault(key: "test-firstLaunch", defaultValue: Date(timeIntervalSinceReferenceDate: 500_000_000), userDefaults: defaults)
+    _cities = UserDefault(key: "test-cities", defaultValue: [], userDefaults: defaults)
+    _menu = UserDefault(key: "test-menu", defaultValue: [:], userDefaults: defaults)
+    _selectedTab = UserDefault(key: "test-selectedTab", defaultValue: .timeline, userDefaults: defaults)
+    _tabOrder = UserDefault(key: "test-tabOrder", defaultValue: [.timeline, .profile, .search], userDefaults: defaults)
   }
 }
 

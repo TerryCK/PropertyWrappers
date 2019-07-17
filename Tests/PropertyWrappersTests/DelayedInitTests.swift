@@ -35,7 +35,7 @@ final class DelayedInitTests: XCTestCase {
     sut.object = NSObject()
     weak var object: NSObject? = sut.object
     XCTAssertNotNil(object)
-    sut.$object.reset()
+    sut.objectWrapper.reset()
     XCTAssertNil(object)
   }
 }
@@ -45,4 +45,10 @@ fileprivate class DelayedInitContainer {
   @DelayedLet var greeting: String
   @DelayedVar var favoriteNumber: Int
   @DelayedVar var object: NSObject
+
+  /// Republishing synthesized storage property because it's private
+  var objectWrapper: DelayedVar<NSObject> {
+    get { _object }
+    set { _object = newValue }
+  }
 }
