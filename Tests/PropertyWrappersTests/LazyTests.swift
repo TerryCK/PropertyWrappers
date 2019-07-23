@@ -21,7 +21,7 @@ final class LazyTests: XCTestCase {
   }
 }
 
-/// Container struct because local vars can't be property wrappers yet.
+/// Container type because local vars can't be property wrappers yet.
 fileprivate struct LazyContainer {
   @Lazy var lazyValue: Int
 

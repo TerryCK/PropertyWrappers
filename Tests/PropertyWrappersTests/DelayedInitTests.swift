@@ -40,7 +40,7 @@ final class DelayedInitTests: XCTestCase {
   }
 }
 
-/// Container struct because local vars can't be property wrappers yet.
+/// Container type because local vars can't be property wrappers yet.
 fileprivate class DelayedInitContainer {
   @DelayedLet var greeting: String
   @DelayedVar var favoriteNumber: Int
