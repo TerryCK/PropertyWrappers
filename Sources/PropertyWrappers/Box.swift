@@ -1,4 +1,4 @@
-/// Boxes any value in a class to give it reference semantics.
+/// A property wrapper that boxes any value in a class to give it reference semantics.
 ///
 /// Source: [Swift Evolution proposal SE-0258](https://github.com/apple/swift-evolution/blob/master/proposals/0258-property-wrappers.md#ref--box)
 @propertyWrapper

@@ -1,4 +1,4 @@
-/// A wrapper for a getter and setter.
+/// A property wrapper that encapsulates a getter and setter for a captured variable.
 ///
 /// Can be used to create a "shared mutable struct": multiple `Ref` instances that
 /// capture the same struct variable in their `read` and `write` closures will

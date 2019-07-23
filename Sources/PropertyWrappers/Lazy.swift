@@ -1,4 +1,4 @@
-/// A value that's initialized lazily when it's first accessed.
+/// A property wrapper for a value that's initialized lazily when it's first accessed.
 ///
 /// This isn't a complete replacement for Swift's built-in `lazy` keyword because, unlike `lazy`, the initial value of a `@Lazy` property can't refer to the `self` of the enclosing type.
 ///
