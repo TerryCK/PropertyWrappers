@@ -33,6 +33,8 @@ public struct UserDefault<Value: PropertyListConvertible> {
     self.key = key
     self.defaultValue = defaultValue
     self.userDefaults = userDefaults
+    // Register default value with user defaults
+    userDefaults.register(defaults: [key: defaultValue().propertyListValue])
   }
 
   public var wrappedValue: Value {

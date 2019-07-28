@@ -19,7 +19,6 @@ final class UserDefaultsTests: XCTestCase {
   }
 
   func testAssignmentSetsUserDefault() {
-    XCTAssertNil(defaults.string(forKey: "test-localeIdentifier"))
     sut.localeIdentifier = "de_DE"
     XCTAssertEqual(defaults.string(forKey: "test-localeIdentifier"), "de_DE")
   }
@@ -41,6 +40,11 @@ final class UserDefaultsTests: XCTestCase {
   func testSetterIsNonmutating() {
     sut.favoriteNumber = 23
     // No assertion needed. The test is that assigning to a let variable compiles.
+  }
+
+  func testRegistersDefaultValueOnInit() {
+    XCTAssertEqual(defaults.integer(forKey: "test-favoriteNumber"), 42)
+    XCTAssertEqual(defaults.string(forKey: "test-localeIdentifier"), "en_US")
   }
 
   func testArray() {
