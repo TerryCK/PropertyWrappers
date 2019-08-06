@@ -10,8 +10,8 @@ public protocol Copyable: AnyObject {
 public struct CopyOnWrite<Value: Copyable> {
   private var _wrappedValue: Value
 
-  public init(initialValue: Value) {
-    _wrappedValue = initialValue
+  public init(wrappedValue: Value) {
+    _wrappedValue = wrappedValue
   }
 
   public var wrappedValue: Value {

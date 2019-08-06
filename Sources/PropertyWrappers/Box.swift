@@ -5,8 +5,8 @@
 public class Box<Value> {
   public var wrappedValue: Value
 
-  public init(initialValue: Value) {
-    self.wrappedValue = initialValue
+  public init(wrappedValue: Value) {
+    self.wrappedValue = wrappedValue
   }
 
   /// A `Ref` that can read and mutate `wrappedValue`.

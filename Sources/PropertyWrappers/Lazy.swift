@@ -10,8 +10,8 @@ public enum Lazy<Value> {
   
   /// Creates the lazy value without initializing it.
   /// - Parameter initialValue: The initializer function that's used to initialize the value on first access.
-  public init(initialValue: @autoclosure @escaping () -> Value) {
-    self = .uninitialized(initialValue)
+  public init(wrappedValue: @autoclosure @escaping () -> Value) {
+    self = .uninitialized(wrappedValue)
   }
   
   public var wrappedValue: Value {

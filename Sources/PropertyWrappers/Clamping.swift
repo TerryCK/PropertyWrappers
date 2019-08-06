@@ -14,9 +14,9 @@ public struct Clamping<Value: Comparable> {
   /// - Parameter range: The range of allowed values for `wrappedValue`.
   ///
   /// The initializer traps if you pass an initialValue that is not inside the range.
-  public init(initialValue: Value, range: ClosedRange<Value>) {
-    precondition(range.contains(initialValue), "initialValue '\(initialValue)' must be inside the range '\(range)'")
-    self._wrappedValue = initialValue
+  public init(wrappedValue: Value, range: ClosedRange<Value>) {
+    precondition(range.contains(wrappedValue), "wrappedValue '\(wrappedValue)' must be inside the range '\(range)'")
+    self._wrappedValue = wrappedValue
     self.range = range
   }
 
