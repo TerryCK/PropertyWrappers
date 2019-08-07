@@ -75,6 +75,7 @@ extension UserDefaultsTests {
         ("testCustomType", testCustomType),
         ("testDictionary", testDictionary),
         ("testGetterRetrievesUserDefault", testGetterRetrievesUserDefault),
+        ("testOptionalWithNilDefaultValue", testOptionalWithNilDefaultValue),
         ("testRegistersDefaultValueOnInit", testRegistersDefaultValueOnInit),
         ("testReturnsValueStoredInUserDefaults", testReturnsValueStoredInUserDefaults),
         ("testSetterIsNonmutating", testSetterIsNonmutating),

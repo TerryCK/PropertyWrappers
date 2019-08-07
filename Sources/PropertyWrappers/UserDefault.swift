@@ -34,7 +34,21 @@ public struct UserDefault<Value: PropertyListConvertible> {
     self.defaultValue = defaultValue
     self.userDefaults = userDefaults
     // Register default value with user defaults
-    userDefaults.register(defaults: [key: defaultValue().propertyListValue])
+    if let defaultValue = defaultValue() as? OptionalProtocol {
+      //
+      // This means we can't register a default value and we can't distinguish between
+      // "value not present" and "values was explicitly set to nil". This makes `nil` the only
+      // safe choice as a default value.
+      precondition(defaultValue.isNil, """
+        The default value for optional UserDefault properties must be nil. \
+        nil or NSNull are not valid property list values. This means we can't distinguish between \
+        "value not present" and "values was explicitly set to nil". \
+        This makes `nil` the only safe choice as a default value.
+        """)
+      // Do nothing else. We can't register a default value.
+    } else {
+      userDefaults.register(defaults: [key: defaultValue().propertyListValue])
+    }
   }
 
   public var wrappedValue: Value {
@@ -45,7 +59,11 @@ public struct UserDefault<Value: PropertyListConvertible> {
       return value
     }
     nonmutating set {
-      userDefaults.set(newValue.propertyListValue, forKey: key)
+      if let optional = newValue as? OptionalProtocol, optional.isNil {
+        userDefaults.removeObject(forKey: key)
+      } else {
+        userDefaults.set(newValue.propertyListValue, forKey: key)
+      }
     }
   }
 }
@@ -86,10 +104,25 @@ extension UUID: PropertyListConvertible {
   }
 }
 
+/// Optionals can be stored in a property list if they wrap a PropertyListConvertible type
+///
+/// - Note: The default value for optional UserDefault properties must be `nil`.
+///   `nil` or `NSNull` are not valid property list values. This means we can't distinguish between
+///   "value not present" and "values was explicitly set to nil".
+///   This makes `nil` the only safe choice as a default value.
+extension Optional: PropertyListConvertible where Wrapped: PropertyListConvertible {
+  public var propertyListValue: Wrapped.Storage? {
+    return self?.propertyListValue
+  }
+
+  public init?(propertyListValue: Wrapped.Storage?) {
+    guard let storedValue = propertyListValue else { return nil }
+    self = Wrapped(propertyListValue: storedValue)
+  }
+}
+
 /// Arrays convert themselves to their property list representation by converting each element to its plist representation.
 extension Array: PropertyListConvertible where Element: PropertyListConvertible {
-  public typealias PropertyListStorage = [Element.Storage]
-
   /// Returns `nil` if one or more elements can't be converted.
   public init?(propertyListValue plistArray: [Element.Storage]) {
     var result: [Element] = []
@@ -119,8 +152,6 @@ extension Dictionary: PropertyListConvertible
     Key.Storage == Key.Storage.Storage,
     Value.Storage == Value.Storage.Storage
 {
-  public typealias PropertyListStorage = [Key.Storage: Value.Storage]
-
   /// Returns `nil` if one or more elements can't be converted.
   public init?(propertyListValue plistDict: [Key.Storage: Value.Storage]) {
     var result: [Key: Value] = [:]
@@ -180,6 +211,20 @@ extension Bool: PropertyListNativelyStorable {}
 extension Date: PropertyListNativelyStorable {}
 extension Data: PropertyListNativelyStorable {}
 
+extension Optional: PropertyListNativelyStorable where Wrapped: PropertyListNativelyStorable {}
+
 extension Array: PropertyListNativelyStorable where Element: PropertyListNativelyStorable {}
 
 extension Dictionary: PropertyListNativelyStorable where Key: PropertyListNativelyStorable, Value: PropertyListNativelyStorable, Key.Storage == Key, Value.Storage == Value {}
+
+// MARK: - OptionalProtocol
+
+/// A marker protocol for Optionals.
+/// Used to identify optional values in type casts in generic contexts.
+protocol OptionalProtocol {
+  var isNil: Bool { get }
+}
+
+extension Optional: OptionalProtocol {
+  var isNil: Bool { self == nil }
+}

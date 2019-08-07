@@ -79,6 +79,16 @@ final class UserDefaultsTests: XCTestCase {
     XCTAssertEqual(defaults.string(forKey: "test-uuid"), "CB8BBC94-4C1F-46A4-B87A-B75608EC4F2F")
     XCTAssertEqual(sut.uuid, UUID(uuidString: "CB8BBC94-4C1F-46A4-B87A-B75608EC4F2F")!)
   }
+
+  func testOptionalWithNilDefaultValue() {
+    XCTAssertNil(sut.loginCredentials)
+    sut.loginCredentials = "alice"
+    XCTAssertEqual(defaults.string(forKey: "test-loginCredentials"), "alice")
+    XCTAssertEqual(sut.loginCredentials, "alice")
+    sut.loginCredentials = nil
+    XCTAssertNil(defaults.string(forKey: "test-loginCredentials"))
+    XCTAssertNil(sut.loginCredentials)
+  }
 }
 
 /// Container type because local vars can't be property wrappers yet.
@@ -93,6 +103,7 @@ fileprivate struct UserDefaultContainer {
   @UserDefault var selectedTab: Tab
   @UserDefault var tabOrder: [Tab]
   @UserDefault var uuid: UUID
+  @UserDefault var loginCredentials: String?
 
   init(defaults: UserDefaults) {
     self.defaults = defaults
@@ -104,6 +115,7 @@ fileprivate struct UserDefaultContainer {
     _selectedTab = UserDefault(key: "test-selectedTab", defaultValue: .timeline, userDefaults: defaults)
     _tabOrder = UserDefault(key: "test-tabOrder", defaultValue: [.timeline, .profile, .search], userDefaults: defaults)
     _uuid = UserDefault(key: "test-uuid", defaultValue: UUID(uuidString: "D4238D12-B341-4FCB-9DB4-03B68EDA293A")!, userDefaults: defaults)
+    _loginCredentials = UserDefault(key: "test-loginCredentials", defaultValue: nil, userDefaults: defaults)
   }
 }
 
