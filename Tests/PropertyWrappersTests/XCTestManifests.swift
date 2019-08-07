@@ -79,6 +79,7 @@ extension UserDefaultsTests {
         ("testReturnsValueStoredInUserDefaults", testReturnsValueStoredInUserDefaults),
         ("testSetterIsNonmutating", testSetterIsNonmutating),
         ("testUsesDefaultValueIfNotSet", testUsesDefaultValueIfNotSet),
+        ("testUUID", testUUID),
     ]
 }
 

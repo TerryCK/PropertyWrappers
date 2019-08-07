@@ -72,6 +72,13 @@ final class UserDefaultsTests: XCTestCase {
     XCTAssertEqual(defaults.string(forKey: "test-selectedTab"), "profile")
     XCTAssertEqual(sut.selectedTab, .profile)
   }
+
+  func testUUID() {
+    XCTAssertEqual(sut.uuid, UUID(uuidString: "D4238D12-B341-4FCB-9DB4-03B68EDA293A")!)
+    sut.uuid = UUID(uuidString: "CB8BBC94-4C1F-46A4-B87A-B75608EC4F2F")!
+    XCTAssertEqual(defaults.string(forKey: "test-uuid"), "CB8BBC94-4C1F-46A4-B87A-B75608EC4F2F")
+    XCTAssertEqual(sut.uuid, UUID(uuidString: "CB8BBC94-4C1F-46A4-B87A-B75608EC4F2F")!)
+  }
 }
 
 /// Container type because local vars can't be property wrappers yet.
@@ -85,6 +92,7 @@ fileprivate struct UserDefaultContainer {
   @UserDefault var menu: [String: [String]]
   @UserDefault var selectedTab: Tab
   @UserDefault var tabOrder: [Tab]
+  @UserDefault var uuid: UUID
 
   init(defaults: UserDefaults) {
     self.defaults = defaults
@@ -95,6 +103,7 @@ fileprivate struct UserDefaultContainer {
     _menu = UserDefault(key: "test-menu", defaultValue: [:], userDefaults: defaults)
     _selectedTab = UserDefault(key: "test-selectedTab", defaultValue: .timeline, userDefaults: defaults)
     _tabOrder = UserDefault(key: "test-tabOrder", defaultValue: [.timeline, .profile, .search], userDefaults: defaults)
+    _uuid = UserDefault(key: "test-uuid", defaultValue: UUID(uuidString: "D4238D12-B341-4FCB-9DB4-03B68EDA293A")!, userDefaults: defaults)
   }
 }
 
@@ -107,7 +116,5 @@ fileprivate enum Tab: String, PropertyListConvertible {
     self.init(rawValue: propertyListValue)
   }
 
-  var propertyListValue: String {
-    return rawValue
-  }
+  var propertyListValue: String { rawValue }
 }

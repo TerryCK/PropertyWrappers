@@ -77,6 +77,15 @@ extension PropertyListConvertible where Storage == Self {
   public var propertyListValue: Self { self }
 }
 
+/// UUID stores itself as a String
+extension UUID: PropertyListConvertible {
+  public var propertyListValue: String { uuidString }
+
+  public init?(propertyListValue: Storage) {
+    self.init(uuidString: propertyListValue)
+  }
+}
+
 /// Arrays convert themselves to their property list representation by converting each element to its plist representation.
 extension Array: PropertyListConvertible where Element: PropertyListConvertible {
   public typealias PropertyListStorage = [Element.Storage]
