@@ -35,8 +35,8 @@ public struct UserDefault<Value: PropertyListConvertible> {
     self.userDefaults = userDefaults
     // Register default value with user defaults
     if let defaultValue = defaultValue() as? OptionalProtocol {
-      //
-      // This means we can't register a default value and we can't distinguish between
+      /// `nil` or `NSNull` are not valid property list values.
+      // This means we can't register a `nil` default value and we can't distinguish between
       // "value not present" and "values was explicitly set to nil". This makes `nil` the only
       // safe choice as a default value.
       precondition(defaultValue.isNil, """
@@ -45,7 +45,7 @@ public struct UserDefault<Value: PropertyListConvertible> {
         "value not present" and "values was explicitly set to nil". \
         This makes `nil` the only safe choice as a default value.
         """)
-      // Do nothing else. We can't register a default value.
+      // Do nothing else. We can't register `nil` as the default value.
     } else {
       userDefaults.register(defaults: [key: defaultValue().propertyListValue])
     }
