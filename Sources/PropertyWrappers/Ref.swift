@@ -4,6 +4,13 @@
 /// capture the same struct variable in their `read` and `write` closures will
 /// mutate the common storage of the captured variable.
 ///
+/// Difference between `Ref` and `Box`:
+///
+/// > `Box` is for creating storage, and `Ref` is about referring to something that's either
+/// directly in a Box, formed through some other get/set pair (say, a computed value),
+/// or derived via key path from another Ref thing.
+/// > — https://forums.swift.org/t/se-0258-property-delegates/23139/99
+///
 /// Source: [Swift Evolution proposal SE-0258](https://github.com/apple/swift-evolution/blob/master/proposals/0258-property-wrappers.md#ref--box)
 @dynamicMemberLookup
 @propertyWrapper
