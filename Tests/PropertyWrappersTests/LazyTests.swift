@@ -22,7 +22,7 @@ final class LazyTests: XCTestCase {
 }
 
 /// Container type because local vars can't be property wrappers yet.
-fileprivate struct LazyContainer {
+private struct LazyContainer {
   @Lazy var lazyValue: Int
 
   /// Republishing synthesized storage property because it's private

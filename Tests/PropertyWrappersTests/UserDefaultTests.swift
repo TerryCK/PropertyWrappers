@@ -92,7 +92,7 @@ final class UserDefaultsTests: XCTestCase {
 }
 
 /// Container type because local vars can't be property wrappers yet.
-fileprivate struct UserDefaultContainer {
+private struct UserDefaultContainer {
   let defaults: UserDefaults
 
   @UserDefault var favoriteNumber: Int
@@ -119,7 +119,7 @@ fileprivate struct UserDefaultContainer {
   }
 }
 
-fileprivate enum Tab: String, PropertyListConvertible {
+private enum Tab: String, PropertyListConvertible {
   case timeline
   case profile
   case search
