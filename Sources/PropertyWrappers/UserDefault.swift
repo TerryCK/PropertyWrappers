@@ -53,7 +53,10 @@ public struct UserDefault<Value: PropertyListConvertible> {
 
   public var wrappedValue: Value {
     get {
-      guard let plistValue = userDefaults.object(forKey: key) as? Value.Storage,
+      // If `Value.Storage == [String: PropertyListNativelyStorable]`, the direct cast from
+      // from Any to Value.Storage fails, but it works when inserting an intermediate cast to
+      // [String: Any]. I don't know why.
+      guard let plistValue = (userDefaults.object(forKey: key) as? Value.Storage) ?? ((userDefaults.object(forKey: key) as? [String: Any]) as? Value.Storage),
         let value = Value(propertyListValue: plistValue)
         else { return defaultValue() }
       return value
@@ -80,27 +83,90 @@ public protocol PropertyListConvertible {
   /// The default implementation for PropertyListStorage == Self uses `propertyListValue` directly as `self`.
   ///
   /// - Returns: `nil` if the conversion failed.
-  init?(propertyListValue: Storage)
+  init?(propertyListValue plistValue: Storage)
 
   /// The property list representation of `self`.
   /// The default implementation for PropertyListStorage == Self returns `self`.
   var propertyListValue: Storage { get }
 }
 
+/// Default implementation for native property list types that don't need any conversion.
 extension PropertyListConvertible where Storage == Self {
-  public init?(propertyListValue: Self) {
-    self = propertyListValue
+  public init?(propertyListValue plistValue: Self) {
+    self = plistValue
   }
 
   public var propertyListValue: Self { self }
+}
+
+extension String: PropertyListConvertible { public typealias Storage = Self }
+extension Int: PropertyListConvertible { public typealias Storage = Self }
+extension Int8: PropertyListConvertible { public typealias Storage = Self }
+extension Int16: PropertyListConvertible { public typealias Storage = Self }
+extension Int32: PropertyListConvertible { public typealias Storage = Self }
+extension Int64: PropertyListConvertible { public typealias Storage = Self }
+extension UInt: PropertyListConvertible { public typealias Storage = Self }
+extension UInt8: PropertyListConvertible { public typealias Storage = Self }
+extension UInt16: PropertyListConvertible { public typealias Storage = Self }
+extension UInt32: PropertyListConvertible { public typealias Storage = Self }
+extension UInt64: PropertyListConvertible { public typealias Storage = Self }
+extension Float: PropertyListConvertible { public typealias Storage = Self }
+extension Double: PropertyListConvertible { public typealias Storage = Self }
+extension Bool: PropertyListConvertible { public typealias Storage = Self }
+extension Date: PropertyListConvertible { public typealias Storage = Self }
+extension Data: PropertyListConvertible { public typealias Storage = Self }
+
+/// Default implementation for Codable types that can encode themselves as a dictionary.
+///
+/// The implementation uses `PropertyListEncoder` and `PropertyListDecoder` to encode/decode
+/// values for storage in user defaults.
+///
+/// To declare that you want to use this default implementation, add the conformance and an
+/// explicit type alias for the `PropertyListConvertible.Storage` associated type:
+///
+///     extension MyCustomType: PropertyListConvertible {
+///       typealias Storage = [String: PropertyListNativelyStorable]
+///     }
+///
+/// - Note: You must ensure that your type encodes itself as a dictionary
+///   (`KeyedEncodingContainer`) and not as an array (`UnkeyedEncodingContainer`) or as a
+///   single value (`SingleValueEncodingContainer`).
+extension PropertyListConvertible where Self: Codable, Self.Storage == [String: PropertyListNativelyStorable] {
+  public init?(propertyListValue plistDict: [String: PropertyListNativelyStorable]) {
+    let decoder = PropertyListDecoder()
+    do {
+      let plistData = try PropertyListSerialization.data(fromPropertyList: plistDict, format: .binary, options: 0)
+      let parsedValue = try decoder.decode(Self.self, from: plistData)
+      self = parsedValue
+    } catch {
+      assertionFailure("Unable to decode plist dictionary for type \(Self.self) stored in user defaults")
+      return nil
+    }
+  }
+
+  public var propertyListValue: [String: PropertyListNativelyStorable] {
+    let encoder = PropertyListEncoder()
+    encoder.outputFormat = .binary
+    do {
+      let plistData = try encoder.encode(self)
+      guard let plist = try (PropertyListSerialization.propertyList(from: plistData, format: nil) as? [String: Any])?.compactMapValues({ $0 as? PropertyListNativelyStorable }) else {
+        assertionFailure("Property list representation of \(Self.self) must be a string-keyed dictionary")
+        return [:]
+      }
+      return plist
+    } catch {
+      assertionFailure("Unable to create property list representation for type \(Self.self) for storage in user defaults")
+      return [:]
+    }
+  }
 }
 
 /// UUID stores itself as a String
 extension UUID: PropertyListConvertible {
   public var propertyListValue: String { uuidString }
 
-  public init?(propertyListValue: Storage) {
-    self.init(uuidString: propertyListValue)
+  public init?(propertyListValue plistString: Storage) {
+    self.init(uuidString: plistString)
   }
 }
 
@@ -111,17 +177,18 @@ extension UUID: PropertyListConvertible {
 ///   "value not present" and "values was explicitly set to nil".
 ///   This makes `nil` the only safe choice as a default value.
 extension Optional: PropertyListConvertible where Wrapped: PropertyListConvertible {
+  public init?(propertyListValue plistValue: Wrapped.Storage?) {
+    guard let storedValue = plistValue else { return nil }
+    self = Wrapped(propertyListValue: storedValue)
+  }
+
   public var propertyListValue: Wrapped.Storage? {
     return self?.propertyListValue
   }
-
-  public init?(propertyListValue: Wrapped.Storage?) {
-    guard let storedValue = propertyListValue else { return nil }
-    self = Wrapped(propertyListValue: storedValue)
-  }
 }
 
-/// Arrays convert themselves to their property list representation by converting each element to its plist representation.
+/// Arrays convert themselves to their property list representation by converting each element to
+/// its plist representation.
 extension Array: PropertyListConvertible where Element: PropertyListConvertible {
   /// Returns `nil` if one or more elements can't be converted.
   public init?(propertyListValue plistArray: [Element.Storage]) {
@@ -142,22 +209,13 @@ extension Array: PropertyListConvertible where Element: PropertyListConvertible 
   }
 }
 
-extension Dictionary: PropertyListConvertible
-  where Key: PropertyListConvertible, Value: PropertyListConvertible,
-    Key.Storage: Hashable,
-    // The Swift 5.1 compiler forced me to add these two constraints, but they don't make much
-    // sense to me. They are related to the `Dictionary: PropertyListNativelyStorable` extension.
-    // I believe they mae sure that the PropertyListStorage associated type is the same in both
-    // extensions.
-    Key.Storage == Key.Storage.Storage,
-    Value.Storage == Value.Storage.Storage
-{
+extension Dictionary: PropertyListConvertible where Key == String, Value: PropertyListConvertible {
   /// Returns `nil` if one or more elements can't be converted.
-  public init?(propertyListValue plistDict: [Key.Storage: Value.Storage]) {
+  public init?(propertyListValue plistDict: [Key: Value.Storage]) {
     var result: [Key: Value] = [:]
     result.reserveCapacity(plistDict.count)
-    for (plistKey, plistValue) in plistDict {
-      guard let key = Key(propertyListValue: plistKey), let value = Value(propertyListValue: plistValue) else {
+    for (key, plistValue) in plistDict {
+      guard let value = Value(propertyListValue: plistValue) else {
         // Abort if one or more elements can't be created.
         return nil
       }
@@ -166,11 +224,10 @@ extension Dictionary: PropertyListConvertible
     self = result
   }
 
-  /// If two or more keys convert to the same key, the result will include only one of those key-value pairs.
-  public var propertyListValue: [Key.Storage: Value.Storage] {
-    return Dictionary<Key.Storage, Value.Storage>(
-      map { ($0.key.propertyListValue, $0.value.propertyListValue) },
-      uniquingKeysWith: { $1 })
+  public var propertyListValue: [Key: Value.Storage] {
+    mapValues { value in
+      value.propertyListValue
+    }
   }
 }
 
@@ -183,7 +240,7 @@ extension Dictionary: PropertyListConvertible
 ///
 /// Instances of these types can be property list objects:
 ///
-/// - Dictionary/NSDictionary (Key and Value must be plist types)
+/// - Dictionary/NSDictionary (Key must be String, Value must be a plist type)
 /// - Array/NSArray (Element must be a plist type)
 /// - String/NSString
 /// - A numeric type that's convertible to NSNumber
@@ -192,7 +249,7 @@ extension Dictionary: PropertyListConvertible
 /// - Data/NSData
 ///
 /// See https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/PropertyList.html
-public protocol PropertyListNativelyStorable: PropertyListConvertible {}
+public protocol PropertyListNativelyStorable {}
 
 extension String: PropertyListNativelyStorable {}
 extension Int: PropertyListNativelyStorable {}
@@ -211,11 +268,18 @@ extension Bool: PropertyListNativelyStorable {}
 extension Date: PropertyListNativelyStorable {}
 extension Data: PropertyListNativelyStorable {}
 
+extension NSNumber: PropertyListNativelyStorable {}
+extension NSString: PropertyListNativelyStorable {}
+extension NSDate: PropertyListNativelyStorable {}
+extension NSData: PropertyListNativelyStorable {}
+extension NSArray: PropertyListNativelyStorable {}
+extension NSDictionary: PropertyListNativelyStorable {}
+
 extension Optional: PropertyListNativelyStorable where Wrapped: PropertyListNativelyStorable {}
 
 extension Array: PropertyListNativelyStorable where Element: PropertyListNativelyStorable {}
 
-extension Dictionary: PropertyListNativelyStorable where Key: PropertyListNativelyStorable, Value: PropertyListNativelyStorable, Key.Storage == Key, Value.Storage == Value {}
+extension Dictionary: PropertyListNativelyStorable where Key == String {}
 
 // MARK: - OptionalProtocol
 

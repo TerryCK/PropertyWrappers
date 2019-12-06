@@ -89,6 +89,16 @@ final class UserDefaultsTests: XCTestCase {
     XCTAssertNil(defaults.string(forKey: "test-loginCredentials"))
     XCTAssertNil(sut.loginCredentials)
   }
+
+  func testDefaultImplementationForCodable() {
+    XCTAssertNil(sut.person)
+    sut.person = Person(name: "Alice", age: 21)
+    XCTAssertEqual(defaults.dictionary(forKey: "test-person")! as NSDictionary, ["name": "Alice", "age": 21])
+    XCTAssertEqual(sut.person, Person(name: "Alice", age: 21))
+    sut.person = nil
+    XCTAssertNil(defaults.dictionary(forKey: "test-person"))
+    XCTAssertNil(sut.person)
+  }
 }
 
 /// Container type because local vars can't be property wrappers yet.
@@ -104,6 +114,7 @@ private struct UserDefaultContainer {
   @UserDefault var tabOrder: [Tab]
   @UserDefault var uuid: UUID
   @UserDefault var loginCredentials: String?
+  @UserDefault var person: Person?
 
   init(defaults: UserDefaults) {
     self.defaults = defaults
@@ -116,6 +127,7 @@ private struct UserDefaultContainer {
     _tabOrder = UserDefault(key: "test-tabOrder", defaultValue: [.timeline, .profile, .search], userDefaults: defaults)
     _uuid = UserDefault(key: "test-uuid", defaultValue: UUID(uuidString: "D4238D12-B341-4FCB-9DB4-03B68EDA293A")!, userDefaults: defaults)
     _loginCredentials = UserDefault(key: "test-loginCredentials", defaultValue: nil, userDefaults: defaults)
+    _person = UserDefault(key: "test-person", defaultValue: nil, userDefaults: defaults)
   }
 }
 
@@ -129,4 +141,11 @@ private enum Tab: String, PropertyListConvertible {
   }
 
   var propertyListValue: String { rawValue }
+}
+
+private struct Person: Equatable, Codable, PropertyListConvertible {
+  typealias Storage = [String: PropertyListNativelyStorable]
+
+  var name: String
+  var age: Int
 }
